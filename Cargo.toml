@@ -1,0 +1,9 @@
+[package]
+name = "meta-ziho"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.39"
+rodio = "0.20.1"
+vvcore = "0.0.2"
