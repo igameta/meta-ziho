@@ -25,8 +25,8 @@ fn main(){
 
         let pcm = MonoPcm(sound.as_slice());
         let mut out_buffer = Vec::new();
-        out_buffer.reserve(mp3lame_encoder::max_required_buffer_size(pcm.len()));
-        let encoded_size = mp3_encoder.flush::<FlushNoGap>(out_buffer.spare_capacity_mut(), pcm).expect("To encode");
+        out_buffer.reserve(mp3lame_encoder::max_required_buffer_size(sound.as_slice().len()));
+        let encoded_size = encoder.flush::<FlushNoGap>(out_buffer.spare_capacity_mut()).expect("to flush");
     }
 
 
