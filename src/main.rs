@@ -1,32 +1,33 @@
 use vvcore::*;
-use chrono::{Local, DateTime};
-use rodio::Decoder;
+use mp3lame_encoder::{Bitrate, Builder, Encoder, FlushNoGap, MonoPcm, Quality};
 
-fn main() {
-    println!("時報起動");
-    // 時刻の取得
-    let now: DateTime<Local> = Local::now();
-    let str_time = now.format("%H時%M分").to_string();
-    println!("{}", str_time);
+enum Speaker{
+    MetanAma = 0,
+    ZundAma = 1,
+    Chibi =42,
+}
 
-    println!("音声合成開始");
-    // 音声合成と音声データの加工
-    let jtalk_dict_dir = std::ffi::CString::new("open_jtalk_dic_utf_8-1.11").unwrap();
-    let vvc = VoicevoxCore::new_from_options(AccelerationMode::Auto, 0, true, jtalk_dict_dir.as_c_str()).unwrap();
-    let speaker: u32 = 1;
-    let sound = vvc.tts_simple(&str_time, speaker).unwrap();
-    let cursor = std::io::Cursor::new(sound.as_slice().to_vec());
-
-    println!("音声合成終了");
-    println!("音声再生開始");
-    // 生成確認用
-    // let mut file = std::fs::File::create("output.wav").unwrap();
-    // file.write_all(&sound.as_slice()).unwrap();
-
-    let (_stream, handle) = rodio::OutputStream::try_default().unwrap();
-    let sink = rodio::Sink::try_new(&handle).unwrap();
-    let source = Decoder::new(cursor).unwrap();
-    sink.append(source);
-    sink.sleep_until_end();
+fn main(){
+    let dict_dir = std::ffi::CString::new("open_jtalk_dic_utf_8-1.11").unwrap();
+    let speaker: Speaker = Speaker::ZundAma;
+    let vvc = VoicevoxCore::new_from_options(AccelerationMode::Auto, 0, false, dict_dir.as_c_str()).unwrap();
+    vvc.load_model(speaker as u32).unwrap();
     
+    for i in 0..=12 {
+        let sound = vvc.tts_simple(&format!("{}時", i), speaker as u32).unwrap();
+        let mut encoder = Builder::new().expect("Create LAME builder");
+        encoder.set_num_channels(1).expect("set channels");
+        encoder.set_sample_rate(44_100).expect("set sample rate");
+        encoder.set_brate(Bitrate::Kbps16).expect("set brate");
+        encoder.set_quality(Quality::Decent).expect("set quality");
+
+        let mut encoder = encoder.build().expect("To innitialize LAME enocder");
+
+        let pcm = MonoPcm(sound.as_slice());
+        let mut out_buffer = Vec::new();
+        out_buffer.reserve(mp3lame_encoder::max_required_buffer_size(pcm.len()));
+        let encoded_size = mp3_encoder.flush::<FlushNoGap>(out_buffer.spare_capacity_mut(), pcm).expect("To encode");
+    }
+
+
 }
