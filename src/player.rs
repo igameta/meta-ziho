@@ -15,7 +15,6 @@ fn main() {
     let vvc = VoicevoxCore::new_from_options(AccelerationMode::Auto, 0, true, jtalk_dict_dir.as_c_str()).unwrap();
     let speaker: u32 = 1;
     let sound = vvc.tts_simple(&str_time, speaker).unwrap();
-    let cursor = std::io::Cursor::new(sound.as_slice().to_vec());
 
     println!("音声合成終了");
     println!("音声再生開始");
@@ -23,6 +22,7 @@ fn main() {
     // let mut file = std::fs::File::create("output.wav").unwrap();
     // file.write_all(&sound.as_slice()).unwrap();
 
+    let cursor = std::io::Cursor::new(sound.as_slice().to_vec());
     let (_stream, handle) = rodio::OutputStream::try_default().unwrap();
     let sink = rodio::Sink::try_new(&handle).unwrap();
     let source = Decoder::new(cursor).unwrap();
